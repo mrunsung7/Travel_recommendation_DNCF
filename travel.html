@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Travel Recommendation System</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 20px;
+        background-color: #f2f2f2;
+        border-radius: 5px;
+      }
+      h1 {
+        text-align: center;
+      }
+      form {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .recommendations {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fff;
+      }
+      .logout-form {
+        text-align: center;
+        margin-top: 20px;
+      }
+      button {
+        background-color: #007bff; /* Primary color */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Travel Recommendation System</h1>
+    <form id="city-form">
+      <label for="city">Select a city:</label>
+      <select id="city" name="city" required>
+        <option value="">--Choose a city--</option>
+        {% for city in cities %}
+        <option value="{{ city }}">{{ city }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Search</button>
+    </form>
+
+    <div class="recommendations" id="recommendations" style="display: none">
+      <h2>Recommendations</h2>
+      <div id="top-recommended"></div>
+      <div id="lowest-recommended"></div>
+    </div>
+
+    <!-- Logout button -->
+    <div class="logout-form">
+      <form method="POST" action="{{ url_for('logout') }}">
+        <button type="submit">Logout</button>
+      </form>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        $("#city-form").submit(function (event) {
+          event.preventDefault(); // Prevent form submission
+
+          const selectedCity = $("#city").val();
+          $.post("/recommend", { city: selectedCity }, function (data) {
+            if (data.error) {
+              alert("Error: " + data.error);
+            } else {
+              // Clear previous recommendations
+              $("#top-recommended").empty();
+              $("#lowest-recommended").empty();
+
+              // Display top recommendations
+              $("#top-recommended").append("<h3>Top Places:</h3><ul></ul>");
+              data.top.forEach(function (place) {
+                $("#top-recommended ul").append(
+                  "<li>" +
+                    place.Place +
+                    " (Predicted Rating: " +
+                    place.Predicted_Rating.toFixed(2) +
+                    ")</li>"
+                );
+              });
+
+              // Display lowest-rated place
+              $("#lowest-recommended").append(
+                "<h3>Lowest Rated Place:</h3><ul></ul>"
+              );
+              data.lowest.forEach(function (place) {
+                $("#lowest-recommended ul").append(
+                  "<li>" +
+                    place.Place +
+                    " (Predicted Rating: " +
+                    place.Predicted_Rating.toFixed(2) +
+                    ") - " +
+                    place.Review +
+                    "</li>"
+                );
+              });
+
+              // Show recommendations section
+              $("#recommendations").show();
+            }
+          }).fail(function (xhr, status, error) {
+            alert("An error occurred: " + xhr.responseText);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
